@@ -1,0 +1,146 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String // Bcrypt hashed password
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([email])
+}
+
+model SkillCategory {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  order     Int      @default(0)
+  skills    Skill[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([order])
+}
+
+model Skill {
+  id         String        @id @default(cuid())
+  name       String        @unique
+  categoryId String
+  category   SkillCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  order      Int           @default(0)
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+
+  @@index([categoryId])
+  @@index([order])
+}
+
+model Project {
+  id                 String   @id @default(cuid())
+  name               String
+  slug               String   @unique
+  coverImage         String? // Cloudinary URL
+  description        String   @db.Text
+  techStack          String[] // Tag list
+  githubLink         String?
+  liveDemoLink       String?
+  challenges         String?  @db.Text // Markdown text
+  futureImprovements String?  @db.Text // Markdown text
+  isPublished        Boolean  @default(false)
+  order              Int      @default(0)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@index([isPublished])
+  @@index([order])
+  @@index([slug])
+}
+
+model Education {
+  id           String    @id @default(cuid())
+  institution  String
+  degree       String
+  fieldOfStudy String?
+  startDate    DateTime
+  endDate      DateTime? // Null means currently studying
+  description  String?   @db.Text
+  order        Int       @default(0)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([order])
+}
+
+model Experience {
+  id          String    @id @default(cuid())
+  company     String
+  position    String
+  startDate   DateTime
+  endDate     DateTime? // Null means currently employed here
+  description String?   @db.Text // Markdown bullet points list
+  order       Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([order])
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  subject   String?
+  content   String   @db.Text
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isRead])
+  @@index([createdAt])
+}
+
+model Resume {
+  id        String   @id @default(cuid())
+  url       String // Cloudinary URL to PDF file
+  name      String   @default("Resume")
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive])
+}
+
+model SocialLink {
+  id           String   @id @default(cuid())
+  platformName String // e.g. GitHub, LinkedIn
+  icon         String // Lucide icon identifier (e.g. "github", "linkedin")
+  url          String
+  displayOrder Int      @default(0)
+  isVisible    Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([displayOrder])
+  @@index([isVisible])
+}
+
+model Settings {
+  id              String   @id @default("global_settings")
+  profilePhotoUrl String? // Cloudinary URL
+  aboutMe         String?  @db.Text // Markdown description
+  jobTitle        String? // e.g. "Full-Stack Software Engineer"
+  fullName        String?
+  contactEmail    String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
