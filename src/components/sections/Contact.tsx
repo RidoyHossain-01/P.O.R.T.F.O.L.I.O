@@ -6,9 +6,16 @@ import { GithubIcon, LinkedinIcon, WhatsappIcon } from "@/components/Icons";
 import { submitContactMessage } from "@/app/admin/actions";
 import ScrollReveal from "../ScrollReveal";
 
+interface SocialLink {
+  id: string;
+  url: string;
+  icon: string;
+  platformName: string;
+}
+
 interface ContactProps {
   contactEmail?: string | null;
-  socialLinks?: any[];
+  socialLinks?: SocialLink[];
 }
 
 export default function Contact({ contactEmail, socialLinks = [] }: ContactProps) {
@@ -71,7 +78,7 @@ export default function Contact({ contactEmail, socialLinks = [] }: ContactProps
             <h2 className="text-[clamp(2.2rem,4.5vw,3.6rem)] font-bold tracking-tight uppercase leading-none text-foreground">
               Get in Touch
             </h2>
-            <div className="h-[2px] w-24 bg-primary mt-6" />
+            <div className="h-0.5 w-24 bg-primary mt-6" />
           </div>
         </ScrollReveal>
 
@@ -201,7 +208,7 @@ export default function Contact({ contactEmail, socialLinks = [] }: ContactProps
                       rows={5}
                       value={message}
                       onChange={(e) => setMessage(e.target.value)}
-                      placeholder="Let's build a premium portfolio together..."
+                      placeholder="Let's build something amazing together..."
                       className="w-full px-4 py-3.5 text-sm sm:text-base bg-background border border-border-custom rounded-xl focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all font-sans normal-case resize-none text-foreground"
                       disabled={sending}
                     />

@@ -16,7 +16,7 @@ export default function Navbar() {
     () => [
       { name: "About", id: "about" },
       { name: "Skills", id: "skills" },
-      { name: "Experience", id: "experience" },
+      // { name: "Experience", id: "experience" },
       { name: "Projects", id: "projects" },
       { name: "Contact", id: "contact" },
     ],

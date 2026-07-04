@@ -51,7 +51,7 @@ export default async function Home() {
         />
         <About aboutMe={settings?.aboutMe} />
         <Skills categories={skillCategories} />
-        <Experience experiences={experiences} />
+        {/* <Experience experiences={experiences} /> */}
         <Education educations={educations} />
         <Projects projects={projects} />
         <Contact
@@ -64,7 +64,7 @@ export default async function Home() {
       <footer className="py-24 border-t border-border-custom bg-card text-center text-xs sm:text-sm font-mono text-muted-foreground transition-colors duration-300">
         <div className="mx-auto max-w-7xl px-6 md:px-8 lg:px-10 flex flex-col sm:flex-row items-center justify-between gap-6">
           <div className="tracking-wide">
-            &copy; {new Date().getFullYear()} {settings?.fullName || "Alex Mercer"}. Designed & Crafted with pride.
+            &copy; {new Date().getFullYear()} {settings?.fullName || "Ridoy Hossain"}. Designed & Crafted with care.
           </div>
           <div className="flex gap-6 uppercase tracking-widest text-[10px] sm:text-xs">
             <a href="#about" className="hover:text-primary transition-colors py-1">Top</a>
