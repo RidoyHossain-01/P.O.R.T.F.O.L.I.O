@@ -11,35 +11,25 @@ export default function LoadingScreen({
   onComplete,
 }: LoadingScreenProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const titleRef = useRef<HTMLHeadingElement>(null);
   const progressBarRef = useRef<HTMLDivElement>(null);
-  const titleRef = useRef<HTMLSpanElement>(null);
 
   const [count, setCount] = useState(0);
 
   useEffect(() => {
-    const prefersReducedMotion = window.matchMedia(
-      "(prefers-reduced-motion: reduce)"
-    ).matches;
-
-    if (prefersReducedMotion) {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       onComplete();
       return;
     }
 
     document.body.style.overflow = "hidden";
 
-    const countObj = { value: 0 };
-
-    const counterTween = gsap.to(countObj, {
-      value: 100,
-      duration: 0.45,
-      ease: "power2.out",
-      onUpdate: () => {
-        setCount(Math.round(countObj.value));
-      },
-    });
+    const counter = { value: 0 };
 
     const tl = gsap.timeline({
+      defaults: {
+        ease: "power2.out",
+      },
       onComplete: () => {
         document.body.style.overflow = "";
         onComplete();
@@ -50,111 +40,78 @@ export default function LoadingScreen({
       titleRef.current,
       {
         opacity: 0,
-        y: 12,
+        y: 10,
       },
       {
         opacity: 1,
         y: 0,
         duration: 0.25,
-        ease: "power2.out",
       }
-    )
-      .fromTo(
-        progressBarRef.current,
-        {
-          scaleX: 0,
+    );
+
+    tl.fromTo(
+      progressBarRef.current,
+      {
+        scaleX: 0,
+      },
+      {
+        scaleX: 1,
+        duration: 1.2,
+      },
+      "<"
+    );
+
+    tl.to(
+      counter,
+      {
+        value: 100,
+        duration: 1.2,
+        ease: "none",
+        onUpdate: () => {
+          setCount(Math.round(counter.value));
         },
-        {
-          scaleX: 1,
-          duration: 0.45,
-          ease: "power2.out",
-        },
-        "<"
-      )
-      .to({}, { duration: 0.08 })
-      .to(containerRef.current, {
-        yPercent: -100,
-        duration: 0.35,
-        ease: "power4.inOut",
-        force3D: true,
-      });
+      },
+      "<"
+    );
+
+    tl.to({}, { duration: 0.15 });
+
+    tl.to(containerRef.current, {
+      yPercent: -100,
+      duration: 0.35,
+      ease: "power4.inOut",
+    });
 
     return () => {
-      counterTween.kill();
-      tl.kill();
       document.body.style.overflow = "";
+      tl.kill();
     };
   }, [onComplete]);
 
   return (
     <div
       ref={containerRef}
-      className="
-      fixed
-      left-0
-      top-0
-      z-[9999]
-      h-dvh
-      w-screen
-      bg-[#0b0b0d]
-      text-[#f4f3ef]
-      flex
-      items-center
-      justify-center
-      overflow-hidden
-      px-6
-      select-none
-      font-mono
-      "
+      className="fixed inset-0 z-9999 flex items-center justify-center bg-[#0b0b0d] text-[#f4f3ef]"
     >
-      <div className="w-full max-w-xs sm:max-w-md lg:max-w-lg">
+      <div className="w-[85vw] max-w-105 flex flex-col gap-4">
+        <div className="flex justify-between items-end text-xs uppercase tracking-[0.25em] opacity-70">
+          <span ref={titleRef}>RIDOY HOSSAIN / PORTFOLIO</span>
 
-        <div className="flex items-end justify-between mb-4">
-          <span
-            ref={titleRef}
-            className="
-            text-[10px]
-            sm:text-xs
-            uppercase
-            tracking-[0.3em]
-            text-white/70
-            "
-          >
-            RIDOY HOSSAIN / PORTFOLIO
-          </span>
-
-          <span
-            className="
-            text-[10px]
-            sm:text-xs
-            tracking-[0.2em]
-            text-[#d4af37]
-            "
-          >
+          <span className="font-mono tabular-nums">
             {count.toString().padStart(3, "0")}%
           </span>
         </div>
 
-        <div className="h-[2px] w-full overflow-hidden rounded-full bg-white/10">
+        <div className="h-0.5 overflow-hidden rounded-full bg-white/10">
           <div
             ref={progressBarRef}
             className="h-full w-full origin-left bg-[#d4af37]"
           />
         </div>
 
-        <p
-          className="
-          mt-4
-          text-center
-          text-[9px]
-          sm:text-[10px]
-          uppercase
-          tracking-[0.35em]
-          text-white/40
-          "
-        >
-          Handcrafting the Digital Workshop
-        </p>
+        <div className="text-center text-[10px] uppercase tracking-[0.3em] opacity-40">
+          Handcrafting the digital workshop
+        </div>
       </div>
     </div>
   );

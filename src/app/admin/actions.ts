@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
+import { Resend } from "resend";
 
 // Helper to enforce authorization
 async function requireAuth() {
@@ -438,6 +439,39 @@ export async function submitContactMessage(data: {
   const msg = await prisma.message.create({
     data,
   });
+
+  // Send email notification to the administrator via Resend
+  try {
+    const resendApiKey = process.env.RESEND_API_KEY;
+    const receiverEmail = process.env.CONTACT_RECEIVER_EMAIL;
+
+    if (resendApiKey && receiverEmail) {
+      const resend = new Resend(resendApiKey);
+      await resend.emails.send({
+        from: "Portfolio Form <onboarding@resend.dev>",
+        to: receiverEmail,
+        replyTo: data.email,
+        subject: `New Portfolio Contact — ${data.name}`,
+        html: `
+          <div style="font-family: sans-serif; padding: 20px; line-height: 1.5; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #eee; border-radius: 8px;">
+            <p style="margin-top: 0; font-weight: bold;">New portfolio message received</p>
+            <hr style="border: 0; border-top: 1px solid #eee; margin: 15px 0;" />
+            <p><strong>Name:</strong><br/>${data.name}</p>
+            <p><strong>Email:</strong><br/>${data.email}</p>
+            <p><strong>Subject:</strong><br/>${data.subject || "No Subject"}</p>
+            <p><strong>Message:</strong><br/>${data.content.replace(/\n/g, "<br/>")}</p>
+            <hr style="border: 0; border-top: 1px solid #eee; margin: 15px 0;" />
+          </div>
+        `,
+      });
+    } else {
+      console.warn("Resend email notification skipped: RESEND_API_KEY or CONTACT_RECEIVER_EMAIL environment variables are not configured.");
+    }
+  } catch (error) {
+    // Log error to server console without breaking form submission flow
+    console.error("Resend email notification failed:", error);
+  }
+
   return msg;
 }
 
