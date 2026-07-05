@@ -78,7 +78,9 @@ export async function uploadFileAction(formData: FormData) {
   }
 
   try {
-    if (isCloudinaryConfigured) {
+    const isPdf = file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
+
+    if (isCloudinaryConfigured && !isPdf) {
       console.log(`[UPLOADER] Uploading file '${file.name}' (${file.size} bytes) to Cloudinary...`);
       
       const arrayBuffer = await file.arrayBuffer();
@@ -96,7 +98,8 @@ export async function uploadFileAction(formData: FormData) {
       console.log(`[UPLOADER] Cloudinary upload successful. URL: ${result.secure_url}`);
       return { url: result.secure_url, success: true };
     } else {
-      console.warn("[UPLOADER] Cloudinary keys not configured. Falling back to local filesystem storage.");
+      const mode = isPdf ? "PDF local override" : "Cloudinary keys not configured";
+      console.warn(`[UPLOADER] ${mode}. Saving file to local filesystem storage.`);
       
       const uploadsDir = path.join(process.cwd(), "public", "uploads");
       await fs.mkdir(uploadsDir, { recursive: true });
