@@ -52,8 +52,24 @@ export async function updateSettings(data: {
 
 import fs from "fs/promises";
 import path from "path";
+import { v2 as cloudinary } from "cloudinary";
 
-// Real uploader action for resume PDF & profile photo
+// Configure Cloudinary conditionally
+const isCloudinaryConfigured = !!(
+  process.env.CLOUDINARY_CLOUD_NAME &&
+  process.env.CLOUDINARY_API_KEY &&
+  process.env.CLOUDINARY_API_SECRET
+);
+
+if (isCloudinaryConfigured) {
+  cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+  });
+}
+
+// Real uploader action for resume PDF & profile photo (and projects images)
 export async function uploadFileAction(formData: FormData) {
   await requireAuth();
   const file = formData.get("file") as File;
@@ -61,20 +77,47 @@ export async function uploadFileAction(formData: FormData) {
     throw new Error("No file uploaded");
   }
 
-  const uploadsDir = path.join(process.cwd(), "public", "uploads");
-  await fs.mkdir(uploadsDir, { recursive: true });
+  try {
+    if (isCloudinaryConfigured) {
+      console.log(`[UPLOADER] Uploading file '${file.name}' (${file.size} bytes) to Cloudinary...`);
+      
+      const arrayBuffer = await file.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+      const base64Data = buffer.toString("base64");
+      
+      const mimeType = file.type || "application/octet-stream";
+      const fileUri = `data:${mimeType};base64,${base64Data}`;
 
-  const bytes = await file.arrayBuffer();
-  const buffer = Buffer.from(bytes);
+      const result = await cloudinary.uploader.upload(fileUri, {
+        folder: "developer-portfolio",
+        resource_type: "auto",
+      });
 
-  const fileName = file.name.replace(/\s+/g, "_");
-  const uniqueFileName = `${Date.now()}_${fileName}`;
-  const filePath = path.join(uploadsDir, uniqueFileName);
+      console.log(`[UPLOADER] Cloudinary upload successful. URL: ${result.secure_url}`);
+      return { url: result.secure_url, success: true };
+    } else {
+      console.warn("[UPLOADER] Cloudinary keys not configured. Falling back to local filesystem storage.");
+      
+      const uploadsDir = path.join(process.cwd(), "public", "uploads");
+      await fs.mkdir(uploadsDir, { recursive: true });
 
-  await fs.writeFile(filePath, buffer);
+      const bytes = await file.arrayBuffer();
+      const buffer = Buffer.from(bytes);
 
-  const finalUrl = `/uploads/${uniqueFileName}`;
-  return { url: finalUrl, success: true };
+      const fileName = file.name.replace(/\s+/g, "_");
+      const uniqueFileName = `${Date.now()}_${fileName}`;
+      const filePath = path.join(uploadsDir, uniqueFileName);
+
+      await fs.writeFile(filePath, buffer);
+
+      const finalUrl = `/uploads/${uniqueFileName}`;
+      console.log(`[UPLOADER] Local filesystem upload successful. URL: ${finalUrl}`);
+      return { url: finalUrl, success: true };
+    }
+  } catch (error: any) {
+    console.error("[UPLOADER] File upload pipeline crashed:", error);
+    throw new Error(`File upload failed: ${error.message || error}`);
+  }
 }
 
 // ----------------------------------------------------
