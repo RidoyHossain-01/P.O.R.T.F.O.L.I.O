@@ -489,18 +489,23 @@ export async function submitContactMessage(data: {
   // Send email notification to the administrator via Resend
   try {
     const resendApiKey = process.env.RESEND_API_KEY;
-    const receiverEmail = process.env.CONTACT_RECEIVER_EMAIL;
+    // Map recipient TO_EMAIL, falling back to CONTACT_RECEIVER_EMAIL, then default owner email
+    const toEmail = process.env.TO_EMAIL || process.env.CONTACT_RECEIVER_EMAIL || "contact.ridoyhossain@gmail.com";
+    // Map sender FROM_EMAIL, falling back to onboarding@resend.dev
+    const fromEmail = process.env.FROM_EMAIL || "onboarding@resend.dev";
 
-    if (resendApiKey && receiverEmail) {
+    if (resendApiKey) {
       const resend = new Resend(resendApiKey);
-      await resend.emails.send({
-        from: "Portfolio Form <onboarding@resend.dev>",
-        to: receiverEmail,
+      
+      console.log(`[RESEND] Attempting to send notification to Admin (${toEmail}) from (${fromEmail})...`);
+      const adminEmailRes = await resend.emails.send({
+        from: `Portfolio Form <${fromEmail}>`,
+        to: toEmail,
         replyTo: data.email,
         subject: `New Portfolio Contact — ${data.name}`,
         html: `
           <div style="font-family: sans-serif; padding: 20px; line-height: 1.5; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #eee; border-radius: 8px;">
-            <p style="margin-top: 0; font-weight: bold;">New portfolio message received</p>
+            <p style="margin-top: 0; font-weight: bold; font-size: 16px; color: #8a7355;">New portfolio message received</p>
             <hr style="border: 0; border-top: 1px solid #eee; margin: 15px 0;" />
             <p><strong>Name:</strong><br/>${data.name}</p>
             <p><strong>Email:</strong><br/>${data.email}</p>
@@ -510,12 +515,33 @@ export async function submitContactMessage(data: {
           </div>
         `,
       });
+      console.log("[RESEND] Admin notification response:", adminEmailRes);
+
+      // Send auto-reply to the visitor
+      console.log(`[RESEND] Attempting to send auto-reply to Visitor (${data.email}) from (${fromEmail})...`);
+      const autoReplyRes = await resend.emails.send({
+        from: `Ridoy Hossain <${fromEmail}>`,
+        to: data.email,
+        subject: `Thank you for reaching out! — Ridoy Hossain`,
+        html: `
+          <div style="font-family: sans-serif; padding: 20px; line-height: 1.5; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #eee; border-radius: 8px;">
+            <p style="margin-top: 0; font-weight: bold; font-size: 16px; color: #8a7355;">Hello ${data.name},</p>
+            <p>Thank you for getting in touch. I have successfully received your message and will review it as soon as possible.</p>
+            <p>Here is a copy of your message for your reference:</p>
+            <div style="background-color: #f9f9f9; padding: 15px; border-radius: 4px; border-left: 3px solid #8a7355; margin: 15px 0; font-style: italic;">
+              ${data.content.replace(/\n/g, "<br/>")}
+            </div>
+            <p>Best regards,<br/><strong>Ridoy Hossain</strong><br/>Full Stack Developer</p>
+          </div>
+        `,
+      });
+      console.log("[RESEND] Auto-reply response:", autoReplyRes);
     } else {
-      console.warn("Resend email notification skipped: RESEND_API_KEY or CONTACT_RECEIVER_EMAIL environment variables are not configured.");
+      console.warn("[RESEND] Resend email notification skipped: RESEND_API_KEY environment variable is not configured.");
     }
   } catch (error) {
     // Log error to server console without breaking form submission flow
-    console.error("Resend email notification failed:", error);
+    console.error("[RESEND] Email sending crashed:", error);
   }
 
   return msg;
