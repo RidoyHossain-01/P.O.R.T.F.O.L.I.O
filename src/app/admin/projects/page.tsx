@@ -139,10 +139,25 @@ export default function AdminProjectsPage() {
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    // ---- FRONTEND UPLOADER AUDIT LOGS ----
+    console.log("---- FRONTEND PROJECTS UPLOADER LOGS ----");
+    console.log("Selected file:", file.name, "size:", file.size, "type:", file.type);
+
     setSaving(true);
     try {
+      console.log("Before FormData append - file size:", file.size);
       const formData = new FormData();
       formData.append("file", file);
+
+      console.log("FormData contents:");
+      for (const [key, value] of formData.entries()) {
+        console.log(`Entry key: ${key}, isFile: ${value instanceof File}`);
+        if (value instanceof File) {
+          console.log(`File name in FormData: ${value.name}, size: ${value.size}`);
+        }
+      }
+
       const res = await uploadFileAction(formData);
       setCoverImage(res.url);
     } catch (err) {

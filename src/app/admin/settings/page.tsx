@@ -94,15 +94,28 @@ export default function AdminSettingsPage() {
     }
   };
 
-  // Mock File Upload (returns local mock path for now)
+  // File Upload handler with frontend logging
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: "photo" | "resume") => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // ---- FRONTEND UPLOADER AUDIT LOGS ----
+    console.log("---- FRONTEND SETTINGS UPLOADER LOGS ----");
+    console.log("Selected file:", file.name, "size:", file.size, "type:", file.type);
+
     setSaving(true);
     try {
+      console.log("Before FormData append - file size:", file.size);
       const formData = new FormData();
       formData.append("file", file);
+      
+      console.log("FormData contents:");
+      for (const [key, value] of formData.entries()) {
+        console.log(`Entry key: ${key}, isFile: ${value instanceof File}`);
+        if (value instanceof File) {
+          console.log(`File name in FormData: ${value.name}, size: ${value.size}`);
+        }
+      }
       
       const res = await uploadFileAction(formData);
       
