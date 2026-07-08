@@ -116,7 +116,7 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
             href="/"
             className="font-mono text-base tracking-[0.2em] uppercase font-bold hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary rounded"
           >
-            AM / PORTFOLIO
+            RH / PORTFOLIO
           </Link>
           <ThemeToggle />
         </div>
@@ -248,7 +248,7 @@ export default async function ProjectDetailPage({ params }: ProjectPageProps) {
 
       {/* Footer */}
       <footer className="py-12 border-t border-border-custom text-center text-xs sm:text-sm font-mono text-muted-foreground">
-        &copy; {new Date().getFullYear()} AM Portfolio. Case studies section.
+        &copy; {new Date().getFullYear()} RH Portfolio. Case studies section.
       </footer>
     </div>
   );
